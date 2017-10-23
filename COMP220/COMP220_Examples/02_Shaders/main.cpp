@@ -152,8 +152,8 @@ int main(int argc, char* args[])
 
 	// An array of 3 vectors which represents 3 vertices
 	static const GLfloat g_vertex_buffer_data[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
+		-15.0f, -10.0f, 20.0f,
+		20.0f, -70.0f, -1.0f,
 		0.0f,  1.0f, 0.0f,
 	};
 
