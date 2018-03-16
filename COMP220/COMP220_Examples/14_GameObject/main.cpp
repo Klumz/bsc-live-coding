@@ -82,19 +82,19 @@ int main(int argc, char* args[])
 	gameObjectList.push_back(pCar);
 
 	pCar = new GameObject();
-	pCar->setPosition(vec3(2.0f, 7.0f, 0.0f));
-	pCar->loadMeshesFromFile("Tank1.FBX");
-	pCar->loadDiffuseTextureFromFile("Tank1DF.png");
+	pCar->setPosition(vec3(4.0f, 0.0f, 0.0f));
+	pCar->loadMeshesFromFile("penguin.FBX");
+	pCar->loadDiffuseTextureFromFile("redwool.png");
 	pCar->loadShaderProgram("textureVert.glsl", "textureFrag.glsl");
 	gameObjectList.push_back(pCar);
-	
-	int mousex;
-	int mousey;
-	float mouseSpeed = 1.0f;
+
+	int mousex = 0;
+	int mousey = 0;
+	float mouseSpeed = 0.2f;
 	float horizontalAngle = 0.0f;
 	float verticalAngle = 0.0f;
 	float deltaTime = 0.0f;
-	float speed = 0.0f;
+	float speed = 15.0f;
 
 	// Direction : Spherical coordinates to Cartesian coordinates conversion
 	glm::vec3 direction(
@@ -163,7 +163,7 @@ int main(int argc, char* args[])
 	GLint projectionMatrixLocation = glGetUniformLocation(programID, "projectionMatrix");
 	GLint textureLocation = glGetUniformLocation(programID, "baseTexture");
 	GLint cameraPositionLocation = glGetUniformLocation(programID, "cameraPosition");
-	
+
 	GLint lightDirectionLocation = glGetUniformLocation(programID, "lightDirection");
 	GLint ambientLightColourLocation = glGetUniformLocation(programID, "ambientLightColour");
 	GLint diffuseLightColourLocation = glGetUniformLocation(programID, "diffuseLightColour");
@@ -236,6 +236,40 @@ int main(int argc, char* args[])
 		//https://wiki.libsdl.org/SDL_PollEvent
 		while (SDL_PollEvent(&ev))
 		{
+			currentTicks = SDL_GetTicks();
+			float deltaTime = (float)(currentTicks - lastTicks) / 1000.0f;
+
+			horizontalAngle += mouseSpeed * deltaTime * float(800 / 2 - mousex);
+			verticalAngle += mouseSpeed * deltaTime * float(640 / 2 - mousey);
+
+			// Direction : Spherical coordinates to Cartesian coordinates conversion
+			glm::vec3 direction(
+				cos(verticalAngle) * sin(horizontalAngle),
+				sin(verticalAngle),
+				cos(verticalAngle) * cos(horizontalAngle)
+			);
+
+			// Right vector
+			glm::vec3 right = glm::vec3(
+				sin(horizontalAngle - 3.14f / 2.0f),
+				0,
+				cos(horizontalAngle - 3.14f / 2.0f)
+			);
+
+			// Up vector : perpendicular to both direction and right
+			glm::vec3 up = glm::cross(right, direction);
+
+			// Camera matrix
+			viewMatrix = glm::lookAt(
+				cameraPosition,           // Camera is here
+				cameraPosition + direction, // and looks here : at the same position, plus "direction"
+				up                  // Head is up (set to 0,-1,0 to look upside-down)
+			);
+
+			SDL_WarpMouseInWindow(window,
+				400,
+				320);
+
 			//Switch case for every message we are intereted in
 			switch (ev.type)
 			{
@@ -263,48 +297,14 @@ int main(int argc, char* args[])
 					break;
 				case SDLK_a:
 					cameraPosition -= right * deltaTime * speed;
-				} 
+				}
 			case SDL_MOUSEMOTION:
-					mousex = ev.motion.x;
-					mousey = ev.motion.y;
-					break;
-			}   
+				mousex = ev.motion.x;
+				mousey = ev.motion.y;
+				break;
+			}
 
 		}
-
-		currentTicks = SDL_GetTicks();
-		float deltaTime = (float)(currentTicks - lastTicks) / 1000.0f;
-
-		horizontalAngle += mouseSpeed * deltaTime * float(800 / 2 - mousex);
-		verticalAngle += mouseSpeed * deltaTime * float(640 / 2 - mousey);
-
-		// Direction : Spherical coordinates to Cartesian coordinates conversion
-		glm::vec3 direction(
-			cos(verticalAngle) * sin(horizontalAngle),
-			sin(verticalAngle),
-			cos(verticalAngle) * cos(horizontalAngle)
-		);
-
-		// Right vector
-		glm::vec3 right = glm::vec3(
-			sin(horizontalAngle - 3.14f / 2.0f),
-			0,
-			cos(horizontalAngle - 3.14f / 2.0f)
-		);
-
-		// Up vector : perpendicular to both direction and right
-		glm::vec3 up = glm::cross(right, direction);
-
-		// Camera matrix
-		viewMatrix = glm::lookAt(
-			cameraPosition,           // Camera is here
-			cameraPosition + direction, // and looks here : at the same position, plus "direction"
-			up                  // Head is up (set to 0,-1,0 to look upside-down)
-		);
-
-		SDL_WarpMouseInWindow(window,
-			400,
-			320);
 
 		//pCar->update();
 
@@ -318,12 +318,12 @@ int main(int argc, char* args[])
 		//btVector3 carOrigin= carTransform.getOrigin();
 		//btQuaternion carRotation = carTransform.getRotation();
 
-		
+
 		glEnable(GL_DEPTH_TEST);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClearDepth(1.0f);
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		for (GameObject * pObj : gameObjectList)
 		{
@@ -426,7 +426,7 @@ int main(int argc, char* args[])
 		{
 			(*gameObjectIter)->destroy();
 			delete (*gameObjectIter);
-			gameObjectIter=gameObjectList.erase(gameObjectIter);
+			gameObjectIter = gameObjectList.erase(gameObjectIter);
 		}
 	}
 	glDeleteProgram(postProcessingProgramID);
